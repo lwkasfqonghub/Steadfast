@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>steadfast</title>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#10161a;--bg2:#17231f;--card:#172025;--line:#243038;
+  --text:#c9d4d1;--head:#e4ebe8;--mute:#8a9893;
+  --p:#8bb5a4;--pl:#a6cabb;--pd:#1e2d2c;--onp:#0f1a17;
+  --track:#1d272d;--scrim:rgba(8,12,14,.65);--knob:#e8efec;
+  --shadow:0 10px 30px rgba(0,0,0,.22);--danger:#d49a95;
+  --navbg:rgba(23,32,37,.92);--tipbg:#1a2628;--tipline:#2a3d3c;
+  --ease:cubic-bezier(.25,.8,.25,1);
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Noto Serif",serif
+}
+@media (prefers-color-scheme:light){
+  :root{
+    color-scheme:light;
+    --bg:#f3f0e8;--bg2:#e6eee7;--card:#faf8f2;--line:#e2dccf;
+    --text:#55605c;--head:#2c3835;--mute:#87908b;
+    --p:#52806d;--pl:#46705f;--pd:#e1ece5;--onp:#ffffff;
+    --track:#e9e4d8;--scrim:rgba(40,48,44,.35);--knob:#ffffff;
+    --shadow:0 10px 30px rgba(70,80,70,.08);--danger:#b86d67;
+    --navbg:rgba(250,248,242,.94);--tipbg:#eef3ec;--tipline:#d6e2d6
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg) radial-gradient(ellipse at 15% 0,var(--bg2),var(--bg) 62%) fixed;color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5;min-height:100vh;overflow-x:hidden}
+body::before{content:"";position:fixed;width:440px;height:440px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--p) 16%,transparent),transparent 65%);top:-140px;right:-160px;pointer-events:none;animation:drift 26s ease-in-out infinite alternate}
+#app{max-width:480px;margin:0 auto;padding:22px 22px 124px;min-height:100vh;position:relative}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:30px}
+.logo{display:flex;align-items:center;gap:12px;font-family:var(--serif);font-size:25px;font-weight:500;color:var(--head);letter-spacing:.2px}
+.ico{width:44px;height:44px;border-radius:50%;background:var(--pd);border:1px solid color-mix(in srgb,var(--p) 35%,transparent);display:grid;place-items:center;color:var(--pl)}
+.ico svg{width:23px;height:23px}
+.eyebrow{font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--mute);font-weight:500}
+h1{font-family:var(--serif);font-size:38px;line-height:1.15;margin:10px 0;color:var(--head);font-weight:500;letter-spacing:-.4px}
+h1 em{font-style:italic;color:var(--pl)}
+h2{font-family:var(--serif);font-size:23px;color:var(--head);font-weight:500;letter-spacing:-.2px;margin:6px 0 14px}
+.sub{color:var(--mute);margin-bottom:26px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:28px;padding:22px;margin-bottom:18px;box-shadow:var(--shadow);transition:border-color .5s}
+.row{display:flex;align-items:center;gap:15px}
+.grow{flex:1;min-width:0}
+.top{display:flex;justify-content:space-between;align-items:flex-start}
+.sq{width:58px;height:58px;border-radius:50%;background:var(--pd);display:grid;place-items:center;color:var(--pl);border:0;cursor:pointer;transition:transform .5s var(--ease),box-shadow .5s}
+.sq.fill{background:var(--p);color:var(--onp)}
+.sq.fill:hover{transform:scale(1.05);box-shadow:0 8px 24px color-mix(in srgb,var(--p) 30%,transparent)}
+.sq:active{transform:scale(.96)}
+.sq svg{width:25px;height:25px}
+.dashed{border:1px dashed var(--line);border-radius:28px;padding:40px 22px;text-align:center;margin-bottom:18px}
+.dashed .ico{margin:0 auto 18px;width:64px;height:64px;animation:breathe 6s ease-in-out infinite}
+.dashed .ico svg{width:28px;height:28px}
+.dashed p{color:var(--mute);margin:8px 0 22px}
+.btn{background:var(--p);color:var(--onp);border:0;border-radius:20px;padding:16px 28px;font-size:16.5px;font-weight:600;cursor:pointer;display:inline-flex;gap:8px;align-items:center;transition:transform .4s var(--ease),box-shadow .5s,opacity .4s}
+.btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 10px 26px color-mix(in srgb,var(--p) 28%,transparent)}
+.btn:active:not(:disabled){transform:scale(.98)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.link{background:none;border:0;color:var(--pl);font-size:15.5px;font-weight:600;cursor:pointer;transition:transform .4s var(--ease)}
+.link:hover{transform:translateX(3px)}
+.ring{position:relative;width:110px;height:110px;flex:none}
+.ring svg{transform:rotate(-90deg)}
+.rt{stroke:var(--track)}.rf{stroke:var(--p)}
+#ringfg{transition:stroke-dashoffset 1.6s var(--ease)}
+.ring div{position:absolute;inset:0;display:grid;place-content:center;text-align:center;font-family:var(--serif);font-size:26px;font-weight:500;color:var(--head)}
+.ring small{font-family:system-ui,sans-serif;font-size:10.5px;letter-spacing:.18em;color:var(--mute);font-weight:500}
+.habit{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:26px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow);transition:border-color .5s,transform .5s var(--ease);max-height:140px}
+.habit:hover{border-color:color-mix(in srgb,var(--c) 55%,var(--line));transform:translateY(-1px)}
+.habit.new{animation:rise .9s var(--ease) both}
+.habit.out{animation:out .45s ease forwards;pointer-events:none}
+.hi{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;flex:none;color:var(--c);background:color-mix(in srgb,var(--c) 15%,transparent)}
+.hi svg{width:21px;height:21px}
+.habit.pop .hi{animation:bump .8s var(--ease)}
+.chk{width:34px;height:34px;border-radius:50%;border:1.8px solid var(--c);background:transparent;cursor:pointer;display:grid;place-items:center;color:var(--onp);flex:none;transition:background .5s var(--ease),transform .3s var(--ease)}
+.chk:hover{transform:scale(1.06)}
+.chk:active{transform:scale(.94)}
+.chk path{stroke-dasharray:1;stroke-dashoffset:0}
+.habit.done .chk{background:var(--c)}
+.habit.done .name{text-decoration:line-through;opacity:.55}
+.habit.pop .chk{animation:pop .8s var(--ease),glow 1s ease-out}
+.habit.pop .chk path{animation:draw .6s .1s ease both}
+.name{font-weight:600;color:var(--head);word-break:break-word;transition:opacity .5s}
+.meta{font-size:13px;color:var(--mute);margin-top:3px}
+.tag{font-size:11px;padding:2px 9px;border-radius:20px;border:1px solid color-mix(in srgb,var(--c) 45%,transparent);color:var(--c);margin-right:7px}
+.del{background:none;border:0;color:var(--mute);cursor:pointer;padding:6px;transition:color .4s}
+.del:hover{color:var(--danger)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:28px;padding:20px;box-shadow:var(--shadow);transition:transform .5s var(--ease)}
+.stat:hover{transform:translateY(-2px)}
+.stat .ico{border:0}
+.stat b{display:block;font-family:var(--serif);font-weight:500;font-size:38px;margin:14px 0 2px;color:var(--head)}
+.stat span{color:var(--mute);font-size:14px}
+.bars{display:flex;gap:9px;height:150px;align-items:flex-end;margin-top:14px}
+.bar{flex:1;height:100%;background:var(--track);border-radius:14px;display:flex;align-items:flex-end;overflow:hidden}
+.bar i{display:block;width:100%;min-height:6px;background:var(--p);border-radius:14px;transition:height 1.4s var(--ease)}
+.lbls{display:flex;gap:9px;margin-top:9px}.lbls span{flex:1;text-align:center;font-size:11px;color:var(--mute)}
+.pbar{height:8px;background:var(--track);border-radius:8px;margin-top:7px;overflow:hidden}.pbar i{display:block;height:100%;border-radius:8px;transition:width 1.4s var(--ease)}
+.pname{display:flex;gap:9px;align-items:center;min-width:0}
+.pname svg{width:18px;height:18px;flex:none}
+.set{display:flex;align-items:center;gap:16px;padding:20px;border-bottom:1px solid var(--line);transition:background .4s}
+.set[onclick]:hover{background:color-mix(in srgb,var(--p) 6%,transparent)}
+.set:last-child{border:0}.set .ico{border:0;width:50px;height:50px}
+.set b{display:block;color:var(--head)}.set span{color:var(--mute);font-size:14px}
+.tog{width:56px;height:32px;border-radius:16px;background:var(--line);position:relative;cursor:pointer;border:0;flex:none;transition:background .5s}
+.tog.on{background:var(--p)}
+.tog::after{content:"";position:absolute;top:4px;left:4px;width:24px;height:24px;border-radius:50%;background:var(--knob);box-shadow:0 1px 4px rgba(0,0,0,.2);transition:left .5s var(--ease)}
+.tog.on::after{left:28px}
+.tip{background:var(--tipbg);border-color:var(--tipline);box-shadow:none}
+.card.row>span:first-child svg{animation:breathe 6s ease-in-out infinite}
+nav{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;width:calc(100% - 32px);max-width:448px;background:var(--navbg);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:32px;padding:9px;display:flex;justify-content:space-between;z-index:5}
+nav button{background:none;border:0;color:var(--mute);padding:14px 18px;border-radius:24px;display:flex;gap:10px;align-items:center;font-size:15.5px;font-weight:600;cursor:pointer;transition:color .4s,background .4s}
+nav button:hover{color:var(--pl)}
+nav button.act{background:var(--pd);color:var(--pl)}
+nav svg{width:23px;height:23px}
+nav.enter button.act{animation:pillIn .7s var(--ease) both}
+nav.enter .lbl{animation:lbl .7s .05s var(--ease) both}
+.modal{position:fixed;inset:0;background:var(--scrim);display:flex;align-items:center;justify-content:center;padding:20px;z-index:10;opacity:0;visibility:hidden;backdrop-filter:blur(0);-webkit-backdrop-filter:blur(0);transition:opacity .45s ease,visibility .45s,backdrop-filter .45s}
+.modal.show{opacity:1;visibility:visible;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.sheet{background:var(--card);border:1px solid var(--line);border-radius:32px;padding:28px;width:100%;max-width:440px;max-height:calc(100vh - 40px);overflow-y:auto;position:relative;box-shadow:var(--shadow);transform:translateY(24px);transition:transform .7s var(--ease)}
+.modal.show .sheet{transform:none}
+.sheet .x{position:absolute;right:22px;top:22px;background:none;border:0;color:var(--mute);cursor:pointer;font-size:26px;transition:color .3s}
+.sheet .x:hover{color:var(--head)}
+label{display:block;font-weight:500;color:var(--mute);margin:22px 0 10px;font-size:14px}
+input[type=text]{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:18px;padding:17px 18px;color:var(--head);font-size:16.5px;outline:none;transition:box-shadow .5s,border-color .5s}
+input[type=text]::placeholder{color:var(--mute);opacity:.8}
+input[type=text]:focus{border-color:var(--p);box-shadow:0 0 0 4px color-mix(in srgb,var(--p) 18%,transparent)}
+.seg{display:flex;gap:12px;margin-top:16px}
+.seg button{flex:1;padding:15px;border-radius:18px;background:transparent;border:1px solid var(--line);color:var(--mute);font-size:16px;font-weight:600;cursor:pointer;transition:background .5s,border-color .5s,color .5s}
+.seg button.sel{background:var(--pd);border-color:var(--p);color:var(--pl)}
+.cols{display:flex;gap:14px}
+.cols button{width:38px;height:38px;border-radius:50%;border:0;cursor:pointer;outline:2px solid transparent;outline-offset:3px;transition:transform .5s var(--ease),outline-color .5s}
+.cols button:hover{transform:scale(1.08)}
+.cols button.sel{outline-color:var(--mute);transform:scale(1.1)}
+.icons{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;--sc:#7fae9b}
+.icons button{aspect-ratio:1;border-radius:50%;background:transparent;border:1px solid var(--line);color:var(--mute);cursor:pointer;display:grid;place-items:center;transition:background .5s,border-color .5s,color .5s,transform .4s var(--ease)}
+.icons button svg{width:21px;height:21px}
+.icons button:hover{color:var(--sc)}
+.icons button:active{transform:scale(.94)}
+.icons button.sel{border-color:var(--sc);color:var(--sc);background:color-mix(in srgb,var(--sc) 15%,transparent)}
+.iname{font-size:13px;color:var(--mute);margin-top:10px;min-height:18px}
+
+#app.enter>*{animation:rise .9s var(--ease) both;animation-delay:calc(var(--i)*70ms)}
+
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes out{from{opacity:1;max-height:140px;transform:none}to{opacity:0;max-height:0;margin-bottom:0;padding-top:0;padding-bottom:0;transform:translateX(24px);border-width:0}}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes bump{0%{transform:scale(1)}45%{transform:scale(1.1)}100%{transform:scale(1)}}
+@keyframes glow{from{box-shadow:0 0 0 0 color-mix(in srgb,var(--c) 40%,transparent)}to{box-shadow:0 0 0 14px transparent}}
+@keyframes draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@keyframes breathe{0%,100%{transform:translateY(0) scale(1);opacity:1}50%{transform:translateY(-4px) scale(1.04);opacity:.85}}
+@keyframes drift{from{transform:translate(0,0)}to{transform:translate(-50px,70px)}}
+@keyframes pillIn{from{opacity:.4}to{opacity:1}}
+@keyframes lbl{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;animation-delay:0s!important;transition-duration:.01ms!important;transition-delay:0s!important}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<nav id="nav"></nav>
+
+<div class="modal" id="modal">
+  <div class="sheet">
+    <button class="x" onclick="closeModal()" aria-label="Close">×</button>
+    <div class="eyebrow">New intention</div>
+    <h2 style="font-size:30px;margin-top:16px">What matters to you?</h2>
+    <label>I want to…</label>
+    <input type="text" id="txt" maxlength="80" placeholder="e.g. Read for 20 minutes" oninput="validate()">
+    <div class="seg">
+      <button id="bDo" class="sel" onclick="setType('do')">✓ Do this</button>
+      <button id="bAvoid" onclick="setType('avoid')">✕ Avoid this</button>
+    </div>
+    <label>Choose a symbol</label>
+    <div class="icons" id="icons"></div>
+    <div class="iname" id="iname"></div>
+    <label>Choose a color</label>
+    <div class="cols" id="cols"></div>
+    <button class="btn" id="addBtn" style="width:100%;justify-content:center;margin-top:28px" onclick="addHabit()" disabled>Add to my routine →</button>
+  </div>
+</div>
+
+<script>
+const COLORS=["#7fae9b","#7ea3c8","#a496cf","#c9a46a","#cc8a84"];
+// habits saved with the old bright colors get the matching calm color
+const OLDC={"#7e57c2":"#a496cf","#4a7fd0":"#7ea3c8","#3f9f6c":"#7fae9b","#c4963a":"#c9a46a","#c25b4f":"#cc8a84"};
+const colorOf=h=>OLDC[h.color]||h.color;
+const I={
+ leaf:'<path d="M5 19c0-8 5-14 15-14 0 10-6 15-14 15M5 19c2-5 5-8 9-10"/>',
+ home:'<path d="M4 11l8-7 8 7v9H4z"/><path d="M10 20v-6h4v6"/>',
+ list:'<path d="M3 6l2 2 3-3M3 14l2 2 3-3M12 7h9M12 15h9M12 19h9"/>',
+ stats:'<path d="M4 3v18h17M9 17v-6M14 17V7M19 17v-4"/>',
+ gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>',
+ bell:'<path d="M6 16V11a6 6 0 0112 0v5l2 2H4zM10 21h4"/>',
+ plus:'<path d="M12 5v14M5 12h14"/>',
+ check:'<path pathLength="1" d="M5 12l5 5 9-10"/>',
+ q:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 015 .5c0 1.5-2.5 2-2.5 3.5M12 17h.01"/>',
+ spark:'<path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/>',
+ target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/>',
+ flame:'<path d="M12 3c1 4 5 5 5 10a5 5 0 01-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-5 1-9z"/>',
+ trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
+ right:'<path d="M9 5l7 7-7 7"/>',
+ shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9.5 9.5l5 5M14.5 9.5l-5 5"/>',
+ ban:'<circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/>',
+ book:'<path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>',
+ globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>',
+ wind:'<path d="M9.6 4.6A2 2 0 1111 8H2M12.6 19.4A2 2 0 1014 16H2M17.7 7.7A2.5 2.5 0 1119.5 12H2"/>',
+ heart:'<path d="M12 20s-8-5-8-11a4.5 4.5 0 018-2.8A4.5 4.5 0 0120 9c0 6-8 11-8 11z"/>',
+ dumbbell:'<path d="M6 7v10M3 9.5v5M18 7v10M21 9.5v5M6 12h12"/>',
+ moon:'<path d="M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z"/>',
+ drop:'<path d="M12 3s6 6.5 6 11a6 6 0 01-12 0c0-4.5 6-11 6-11z"/>',
+ coffee:'<path d="M4 9h13v5a5 5 0 01-5 5H9a5 5 0 01-5-5zM17 10h1.5a2.5 2.5 0 010 5H17M8 3v3M12 3v3"/>',
+ music:'<path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/>',
+ pencil:'<path d="M4 20l1-4L16 5l3 3L8 19zM14 7l3 3"/>',
+ smile:'<circle cx="12" cy="12" r="9"/><path d="M8.5 14a4.5 4.5 0 007 0M9 9.5h.01M15 9.5h.01"/>',
+ sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+ phone:'<rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="M11 18h2"/>',
+ coin:'<circle cx="12" cy="12" r="9"/><path d="M12 7v10M14.5 9.5c-.5-1-4-1.5-4 .5s4 1.5 4 3.5-3.5 1.5-4 .5"/>',
+ brief:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2"/>',
+ star:'<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>'
+};
+const SYMBOLS=[
+ ["shield","Protect / avoid"],["ban","Stop / quit"],["book","Learning"],["globe","Language"],["wind","Fresh air"],
+ ["dumbbell","Exercise"],["heart","Health"],["drop","Hydration"],["moon","Sleep"],["sun","Morning / sunlight"],
+ ["smile","Mindfulness"],["pencil","Writing"],["music","Music"],["coffee","Caffeine / drinks"],["phone","Screen time"],
+ ["coin","Money"],["brief","Work"],["leaf","Nature"],["star","Goal"],["target","Focus"]
+];
+const ic=(n,s)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"${s?` style="width:${s}px;height:${s}px"`:''}>${I[n]}</svg>`;
+const esc=s=>s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const iconOf=h=>(h.icon&&I[h.icon])?h.icon:(h.type==='avoid'?'shield':'target');
+const reduced=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const KEY="steadfast_v1";
+let S;
+try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+S=S||{habits:[],checks:{},reminders:false};
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const dkey=d=>{const t=new Date(d);return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0")};
+const today=()=>dkey(new Date());
+const dayOffset=n=>{const d=new Date();d.setDate(d.getDate()-n);return d};
+const done=(id,k)=>(S.checks[k]||[]).includes(id);
+let tab="today",type="do",color=COLORS[0],icon="target",iconTouched=false;
+let animate=true,popId=null,newId=null,prevPct=0,curPct=0;
+
+function toggle(id){
+  const k=today();S.checks[k]=S.checks[k]||[];
+  const i=S.checks[k].indexOf(id);
+  if(i>=0)S.checks[k].splice(i,1);else{S.checks[k].push(id);popId=id}
+  save();render();popId=null;
+}
+function streak(id){
+  let n=0,i=done(id,today())?0:1;
+  for(;i<3650;i++){if(done(id,dkey(dayOffset(i))))n++;else break}
+  return n;
+}
+function bestStreak(){
+  let best=0;
+  S.habits.forEach(h=>{
+    let run=0;
+    for(let i=730;i>=0;i--){
+      if(done(h.id,dkey(dayOffset(i)))){run++;best=Math.max(best,run)}else run=0;
+    }
+  });
+  return best;
+}
+const total=()=>Object.values(S.checks).reduce((a,b)=>a+b.length,0);
+
+function habitRow(h){
+  const d=done(h.id,today()),st=streak(h.id);
+  return `<div class="habit ${d?'done':''} ${popId===h.id?'pop':''} ${newId===h.id?'new':''}" data-id="${h.id}" style="--c:${colorOf(h)}">
+    <button class="chk" onclick="toggle('${h.id}')" aria-label="Check in">${d?ic('check',18):''}</button>
+    <div class="hi">${ic(iconOf(h))}</div>
+    <div class="grow"><div class="name">${esc(h.text)}</div>
+    <div class="meta"><span class="tag">${h.type==='do'?'Do':'Avoid'}</span>${st?st+' day streak':(h.type==='do'?'Not done yet':'Avoided today? Tap to check in')}</div></div></div>`;
+}
+const emptyCard=(t,p)=>`<div class="dashed"><div class="ico">${ic('target')}</div><h2 style="margin:0">${t}</h2><p>${p}</p><button class="btn" onclick="openModal()">${ic('plus',20)} Add a habit</button></div>`;
+
+function pToday(){
+  const n=S.habits.length,c=S.habits.filter(h=>done(h.id,today())).length;
+  const pct=n?Math.round(c/n*100):0,C=2*Math.PI*46;
+  curPct=pct;
+  const startOff=C*(1-prevPct/100),endOff=C*(1-pct/100);
+  const dt=new Date().toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"});
+  return `<div class="top"><div><div class="eyebrow">${dt}</div><h1>Small steps.<br><em>Real change.</em></h1></div>
+    <div class="ring"><svg width="110" height="110" viewBox="0 0 110 110"><circle class="rt" cx="55" cy="55" r="46" fill="none" stroke-width="9"/><circle class="rf" id="ringfg" data-t="${endOff}" cx="55" cy="55" r="46" fill="none" stroke-width="9" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${startOff}"/></svg><div><span class="cnt" data-to="${pct}" data-from="${prevPct}" data-suf="%">${prevPct}%</span><small>TODAY</small></div></div></div>
+    <div class="card row" style="margin-top:26px"><span style="color:var(--pl)">${ic('spark',28)}</span><div><b style="color:var(--head)">Consistency over intensity.</b><div class="sub" style="margin:4px 0 0">Keep showing up for the person you’re becoming.</div></div></div>
+    <div class="eyebrow" style="margin-top:36px">Your routine</div>
+    <div class="top" style="align-items:center"><h2>Today’s intentions</h2><button class="link" onclick="go('habits')">Manage ›</button></div>
+    ${n?S.habits.map(habitRow).join(''):emptyCard('Make your first promise','Choose one thing you want to do more of or avoid.<br>You can keep it simple.')}`;
+}
+function pHabits(){
+  return `<div class="top"><div><div class="eyebrow">Build your baseline</div><h1>All habits</h1></div><button class="sq fill" onclick="openModal()" aria-label="Add">${ic('plus')}</button></div>
+  <p class="sub">A little structure makes room for a lot of progress.</p>
+  ${S.habits.length?S.habits.map(h=>`<div class="habit ${newId===h.id?'new':''}" data-id="${h.id}" style="--c:${colorOf(h)}"><div class="hi">${ic(iconOf(h))}</div><div class="grow"><div class="name">${esc(h.text)}</div><div class="meta"><span class="tag">${h.type==='do'?'Do':'Avoid'}</span>${total()?countFor(h.id)+' check-ins':'No check-ins yet'}</div></div><button class="del" onclick="delHabit('${h.id}')" aria-label="Delete">${ic('trash',22)}</button></div>`).join(''):emptyCard('Your list is clear','Add an intention and make it yours.')}`;
+}
+const countFor=id=>Object.values(S.checks).filter(a=>a.includes(id)).length;
+function pStats(){
+  const n=S.habits.length,days=[];
+  for(let i=6;i>=0;i--)days.push(dayOffset(i));
+  const counts=days.map(d=>(S.checks[dkey(d)]||[]).filter(id=>S.habits.some(h=>h.id===id)).length);
+  const wk=counts.reduce((a,b)=>a+b,0),rhythm=n?Math.round(wk/(n*7)*100):0,max=Math.max(n,1);
+  const box=(i,v,l,c,suf='')=>`<div class="stat"><div class="ico" style="color:${c};background:${c}26">${ic(i)}</div><b class="cnt" data-to="${v}" data-from="0" data-suf="${suf}">0${suf}</b><span>${l}</span></div>`;
+  const mx=Math.max(1,...S.habits.map(x=>countFor(x.id)));
+  return `<div class="top"><div><div class="eyebrow">Your progress</div><h1>Stats</h1></div><div class="sq" style="cursor:default">${ic('stats')}</div></div>
+  <p class="sub">Notice what’s working. Keep going.</p>
+  <div class="grid">${box('check',total(),'Total check-ins','#7fae9b')}${box('target',n,'Active habits','#7ea3c8')}${box('flame',bestStreak(),'Best habit streak','#c9a46a')}${box('spark',rhythm,'Weekly rhythm','#a496cf','%')}</div>
+  <div class="card"><div class="eyebrow">Last 7 days</div><div class="top" style="align-items:center"><h2 style="margin:6px 0">Showing up</h2><b style="color:var(--pl)"><span class="cnt" data-to="${wk}" data-from="0">0</span> check-ins</b></div>
+  <div class="bars">${counts.map((c,i)=>`<div class="bar"><i data-h="${c/max*100}" style="height:0;transition-delay:${i*90}ms"></i></div>`).join('')}</div>
+  <div class="lbls">${days.map(d=>`<span>${d.toLocaleDateString("en-US",{month:"short",day:"numeric"})}</span>`).join('')}</div></div>
+  <div class="card"><div class="eyebrow">By intention</div><h2>Where it adds up</h2>
+  ${n?S.habits.map((h,i)=>{const c=countFor(h.id),hc=colorOf(h);return `<div style="margin-bottom:16px"><div class="top"><span class="name pname"><span style="color:${hc};display:flex">${ic(iconOf(h))}</span>${esc(h.text)}</span><span class="meta">${c}</span></div><div class="pbar"><i data-w="${Math.min(100,c/mx*100)}" style="width:0;transition-delay:${i*110}ms;background:${hc}"></i></div></div>`}).join(''):'<p class="sub" style="margin:0">Add a habit to start seeing your rhythm.</p>'}</div>`;
+}
+function pSettings(){
+  const n=total();
+  return `<div class="top"><div><div class="eyebrow">Your space</div><h1>Settings</h1></div><div class="sq" style="cursor:default">${ic('gear')}</div></div>
+  <p class="sub">Keep your practice calm and intentional.</p>
+  <div class="card" style="padding:0;overflow:hidden">
+    <div class="set"><div class="ico">${ic('bell')}</div><div class="grow"><b>Gentle reminders</b><span>A gentle nudge every day at 8 PM.</span></div><button class="tog ${S.reminders?'on':''}" onclick="toggleRem(this)" aria-label="Toggle reminders"></button></div>
+    <div class="set"><div class="ico">${ic('leaf')}</div><div class="grow"><b>Private by design</b><span>No ads. No subscriptions. No tracking. All data stays in your device.</span></div><span style="color:var(--p)">${ic('check',26)}</span></div>
+    <div class="set" style="cursor:pointer" onclick="alert('steadfast: open source habit tracking for everyday people.\\n\\nAll data is stored on your device. Nothing is ever sent anywhere.')"><div class="ico">${ic('q')}</div><div class="grow"><b>About steadfast</b><span>Open source habit tracking for everyday people.</span></div><span style="color:var(--mute)">${ic('right',22)}</span></div>
+    <div class="set" style="cursor:pointer" onclick="resetAll()"><div class="ico" style="color:var(--danger)">${ic('trash')}</div><div class="grow"><b>Erase all data</b><span>Remove every habit and check-in from this device.</span></div></div>
+  </div>
+  <div class="card tip row"><span style="color:var(--pl)">${ic('spark',28)}</span><div><b style="color:var(--head)">Progress, not perfection.</b><div class="sub" style="margin:6px 0 0">You’ve logged ${n} check-in${n===1?'':'s'} so far.${n?' That’s proof you’re already changing.':''}</div></div></div>`;
+}
+function countUp(el){
+  const to=+el.dataset.to,from=+el.dataset.from||0,suf=el.dataset.suf||'';
+  if(reduced||from===to){el.textContent=to+suf;return}
+  const t0=performance.now(),dur=1300;
+  (function f(t){
+    const p=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-p,3);
+    el.textContent=Math.round(from+(to-from)*e)+suf;
+    if(p<1)requestAnimationFrame(f);
+  })(t0);
+}
+function render(){
+  const anim=animate;animate=false;
+  if(anim)prevPct=0;
+  const pages={today:pToday,habits:pHabits,stats:pStats,settings:pSettings};
+  const app=document.getElementById("app");
+  app.className=anim?"enter":"";
+  app.innerHTML=`<header><div class="logo"><div class="ico">${ic('leaf')}</div>steadfast</div><div class="ico" style="border:0;background:transparent;color:var(--mute)">${ic('bell')}</div></header>`+pages[tab]();
+  [...app.children].forEach((el,i)=>el.style.setProperty("--i",Math.min(i,10)));
+  const tabs=[["today","home","Today"],["habits","list","Habits"],["stats","stats","Stats"],["settings","gear","Settings"]];
+  const nav=document.getElementById("nav");
+  nav.className=anim?"enter":"";
+  nav.innerHTML=tabs.map(([k,i,l])=>`<button class="${tab===k?'act':''}" onclick="go('${k}')">${ic(i)}${tab===k?`<span class="lbl">${l}</span>`:''}</button>`).join('');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    app.querySelectorAll("[data-h]").forEach(e=>e.style.height=e.dataset.h+"%");
+    app.querySelectorAll("[data-w]").forEach(e=>e.style.width=e.dataset.w+"%");
+    const r=document.getElementById("ringfg");if(r)r.style.strokeDashoffset=r.dataset.t;
+    app.querySelectorAll(".cnt").forEach(countUp);
+  }));
+  prevPct=curPct;
+}
+function go(t){tab=t;animate=true;render();window.scrollTo({top:0,behavior:reduced?"auto":"smooth"})}
+function openModal(){
+  document.getElementById("txt").value="";color=COLORS[0];iconTouched=false;
+  setType("do");drawCols();validate();
+  document.getElementById("modal").classList.add("show");
+  document.getElementById("modal").querySelector(".sheet").scrollTop=0;
+  setTimeout(()=>document.getElementById("txt").focus({preventScroll:true}),200);
+}
+function closeModal(){document.getElementById("modal").classList.remove("show");document.getElementById("txt").blur()}
+function setType(t){
+  type=t;
+  document.getElementById("bDo").className=t==="do"?"sel":"";
+  document.getElementById("bAvoid").className=t==="avoid"?"sel":"";
+  if(!iconTouched)icon=t==="avoid"?"shield":"target";
+  drawIcons();
+}
+function drawIcons(){
+  const box=document.getElementById("icons");
+  box.style.setProperty("--sc",color);
+  box.innerHTML=SYMBOLS.map(([k,l])=>`<button type="button" class="${k===icon?'sel':''}" data-k="${k}" title="${l}" aria-label="${l}" onclick="pickIcon('${k}')">${ic(k)}</button>`).join('');
+  const cur=SYMBOLS.find(s=>s[0]===icon);
+  document.getElementById("iname").textContent=cur?cur[1]:"";
+}
+function pickIcon(k){
+  icon=k;iconTouched=true;
+  [...document.getElementById("icons").children].forEach(b=>b.classList.toggle("sel",b.dataset.k===k));
+  const cur=SYMBOLS.find(s=>s[0]===k);
+  document.getElementById("iname").textContent=cur?cur[1]:"";
+}
+function drawCols(){
+  document.getElementById("cols").innerHTML=COLORS.map(c=>`<button data-c="${c}" class="${c===color?'sel':''}" style="background:${c}" onclick="pickColor('${c}')" aria-label="Color"></button>`).join('');
+}
+function pickColor(c){
+  color=c;
+  [...document.getElementById("cols").children].forEach(b=>b.classList.toggle("sel",b.dataset.c===c));
+  document.getElementById("icons").style.setProperty("--sc",c);
+}
+function validate(){document.getElementById("addBtn").disabled=!document.getElementById("txt").value.trim()}
+function addHabit(){
+  const t=document.getElementById("txt").value.trim();
+  if(!t)return;
+  const id="h"+Date.now();
+  S.habits.push({id,text:t,type,color,icon});
+  save();closeModal();
+  newId=id;render();newId=null;
+}
+function delHabit(id){
+  if(!confirm("Delete this habit and its history?"))return;
+  const finish=()=>{
+    S.habits=S.habits.filter(h=>h.id!==id);
+    Object.keys(S.checks).forEach(k=>S.checks[k]=S.checks[k].filter(x=>x!==id));
+    save();render();
+  };
+  const el=document.querySelector(`[data-id="${id}"]`);
+  if(el&&!reduced){el.classList.add("out");setTimeout(finish,460)}else finish();
+}
+function resetAll(){
+  if(confirm("Erase ALL habits and check-ins? This cannot be undone.")){S={habits:[],checks:{},reminders:false};save();syncNative();animate=true;render()}
+}
+
+/* ---------- Reminders ---------- */
+const LN=(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform())?Capacitor.registerPlugin("LocalNotifications"):null;
+
+async function syncNative(){
+  if(!LN)return;
+  try{
+    await LN.cancel({notifications:[{id:1}]});
+    if(S.reminders){
+      await LN.schedule({notifications:[{
+        id:1,
+        title:"steadfast",
+        body:"Small steps count. Check in on your intentions today.",
+        schedule:{on:{hour:20,minute:0},allowWhileIdle:true}
+      }]});
+    }
+  }catch(e){}
+}
+
+async function toggleRem(btn){
+  if(!S.reminders){
+    if(LN){
+      try{
+        const p=await LN.requestPermissions();
+        if(p.display!=="granted"){alert("Notification permission was not granted.");return}
+      }catch(e){alert("Couldn’t request notification permission.");return}
+    }else{
+      if(!("Notification" in window)){alert("Notifications aren’t supported in this browser.");return}
+      const p=await Notification.requestPermission();
+      if(p!=="granted"){alert("Notification permission was not granted.");return}
+    }
+  }
+  S.reminders=!S.reminders;save();
+  btn.classList.toggle("on",S.reminders);
+  syncNative();
+}
+
+// Browser-only fallback (the APK uses native scheduling instead)
+setInterval(()=>{
+  if(LN||!S.reminders||!("Notification" in window)||Notification.permission!=="granted")return;
+  const d=new Date(),flag="steadfast_notified";
+  if(d.getHours()===20&&localStorage.getItem(flag)!==today()){
+    const pending=S.habits.filter(h=>!done(h.id,today())).length;
+    if(pending){new Notification("steadfast",{body:`${pending} intention${pending>1?'s':''} still waiting. Small steps count.`});localStorage.setItem(flag,today())}
+  }
+},60000);
+
+document.getElementById("txt").addEventListener("keydown",e=>{if(e.key==="Enter")addHabit()});
+document.getElementById("modal").addEventListener("click",e=>{if(e.target.id==="modal")closeModal()});
+render();
+syncNative();
+</script>
+</body>
+</html>
