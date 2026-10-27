@@ -1,25 +1,13 @@
-name: Build APK
 on:
-  workflow_dispatch:
   push:
-    branches: [main]
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+# ...your existing build steps...
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
         with:
-          node-version: 20
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
-      - run: npm install
-      - run: npx cap add android
-      - run: npx cap sync android
-      - run: cd android && chmod +x gradlew && ./gradlew assembleDebug
-      - uses: actions/upload-artifact@v4
-        with:
-          name: steadfast-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          files: android/app/build/outputs/apk/debug/*.apk
