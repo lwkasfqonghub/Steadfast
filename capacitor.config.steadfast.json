@@ -1,0 +1,15 @@
+{
+  "appId": "com.yourname.steadfast",
+  "appName": "steadfast",
+  "webDir": "www",
+  "backgroundColor": "#10161a",
+  "android": {
+    "backgroundColor": "#10161a"
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_icon_config_sample",
+      "iconColor": "#8bb5a4"
+    }
+  }
+}
