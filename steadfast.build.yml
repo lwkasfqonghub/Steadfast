@@ -1,0 +1,63 @@
+name: Build APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check app files exist
+        run: |
+          test -f www/index.html || { echo "www/index.html is missing"; exit 1; }
+          test -f package.json || { echo "package.json is missing"; exit 1; }
+          test -f capacitor.config.json || { echo "capacitor.config.json is missing"; exit 1; }
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Generate app icon (optional)
+        run: |
+          if [ -f assets/icon-only.png ]; then
+            npx --yes @capacitor/assets generate --android --iconBackgroundColor '#10161a' --iconBackgroundColorDark '#10161a' || echo "Icon step failed, using default icon"
+          else
+            echo "No assets/icon-only.png found, using default icon"
+          fi
+
+      - name: Sync web files into Android project
+        run: npx cap sync android
+
+      - name: Keep the same signing key between builds
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: debug-keystore-v1
+
+      - name: Build debug APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: steadfast-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
