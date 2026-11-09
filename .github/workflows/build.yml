@@ -1,21 +1,37 @@
-name: Build APK
+name: Release APK
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
+    inputs:
+      version:
+        description: "Version number, e.g. 1.1"
+        required: true
+      notes:
+        description: "What's new"
+        required: false
+        default: "Bug fixes and improvements."
+
+permissions:
+  contents: write
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check app files exist
+      - name: Check app files and signing secrets
+        env:
+          KS: ${{ secrets.KEYSTORE_BASE64 }}
+          KSP: ${{ secrets.KEYSTORE_PASSWORD }}
+          KA: ${{ secrets.KEY_ALIAS }}
+          KP: ${{ secrets.KEY_PASSWORD }}
         run: |
           test -f www/index.html || { echo "www/index.html is missing"; exit 1; }
           test -f package.json || { echo "package.json is missing"; exit 1; }
           test -f capacitor.config.json || { echo "capacitor.config.json is missing"; exit 1; }
+          [ -n "$KS" ] || { echo "Secret KEYSTORE_BASE64 is missing"; exit 1; }
+          [ -n "$KSP" ] && [ -n "$KA" ] && [ -n "$KP" ] || { echo "A signing secret is missing"; exit 1; }
 
       - uses: actions/setup-node@v4
         with:
@@ -32,6 +48,8 @@ jobs:
       - name: Add Android platform
         run: npx cap add android
 
+      # ---- PASTE your "Add home-screen widgets" step here, unchanged ----
+
       - name: Generate app icon (optional)
         run: |
           if [ -f assets/icon-only.png ]; then
@@ -40,24 +58,54 @@ jobs:
             echo "No assets/icon-only.png found, using default icon"
           fi
 
+      - name: Set version and release signing
+        env:
+          VERSION: ${{ inputs.version }}
+          RUN_NUMBER: ${{ github.run_number }}
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > android/app/release.keystore
+          python3 - <<'PY'
+          import os, re
+          p = "android/app/build.gradle"
+          s = open(p, encoding="utf-8").read()
+          s = re.sub(r"versionCode\s+\d+", "versionCode " + os.environ["RUN_NUMBER"], s, count=1)
+          s = re.sub(r'versionName\s+"[^"]*"', 'versionName "' + os.environ["VERSION"] + '"', s, count=1)
+          signing = """    signingConfigs {
+              release {
+                  storeFile file("release.keystore")
+                  storePassword System.getenv("KEYSTORE_PASSWORD")
+                  keyAlias System.getenv("KEY_ALIAS")
+                  keyPassword System.getenv("KEY_PASSWORD")
+              }
+          }
+          """
+          s = s.replace("buildTypes {", signing + "    buildTypes {", 1)
+          s = re.sub(r"(buildTypes\s*\{\s*release\s*\{)", r"\1\n            signingConfig signingConfigs.release", s, count=1)
+          open(p, "w", encoding="utf-8").write(s)
+          PY
+          grep -q "signingConfigs.release" android/app/build.gradle || { echo "Signing setup failed"; exit 1; }
+
       - name: Sync web files into Android project
         run: npx cap sync android
 
-      - name: Keep the same signing key between builds
-        uses: actions/cache@v4
-        with:
-          path: ~/.android/debug.keystore
-          key: debug-keystore-v1
-
-      - name: Build debug APK
+      - name: Build signed release APK
         working-directory: android
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleRelease --no-daemon
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - name: Name the APK
+        run: cp android/app/build/outputs/apk/release/app-release.apk "steadfast-${{ inputs.version }}.apk"
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
         with:
-          name: steadfast-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
+          tag_name: v${{ inputs.version }}
+          name: steadfast ${{ inputs.version }}
+          body: ${{ inputs.notes }}
+          files: steadfast-${{ inputs.version }}.apk
